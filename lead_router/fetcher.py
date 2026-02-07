@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
 Lead Fetcher - RSS/API aggregation
-Fetches from Upwork RSS, Reddit API, IndieHackers RSS
+Fetches from Reddit, IndieHackers, HN, We Work Remotely, RemoteOK
 """
 
 import feedparser
 import hashlib
 import json
+import re
 import sys
 import urllib.request
 from datetime import datetime, timedelta
@@ -85,7 +86,6 @@ def fetch_reddit_api(subreddit: str, keywords: List[str]) -> List[Lead]:
             
             # Extract budget from title or body
             budget = None
-            import re
             budget_match = re.search(r'\$[\d,]+(?:-\$?[\d,]+)?|\$\d+k?', title + " " + desc)
             if budget_match:
                 budget = budget_match.group()
@@ -135,6 +135,185 @@ def fetch_indiehackers_rss() -> List[Lead]:
     return leads
 
 
+def fetch_hn_whoishiring() -> List[Lead]:
+    """Fetch from Hacker News 'Who is Hiring' monthly thread."""
+    leads = []
+    
+    try:
+        # HN Algolia API - search for "Who is Hiring" posts
+        url = "https://hn.algolia.com/api/v1/search?query=who+is+hiring&tags=story&hitsPerPage=5"
+        
+        req = urllib.request.Request(
+            url,
+            headers={'User-Agent': 'LeadBot/1.0'}
+        )
+        
+        with urllib.request.urlopen(req, timeout=15) as response:
+            data = json.loads(response.read())
+        
+        # Find the most recent who is hiring thread
+        thread_id = None
+        for hit in data.get('hits', []):
+            title = hit.get('title', '').lower()
+            if 'who is hiring' in title:
+                thread_id = hit.get('objectID')
+                break
+        
+        if not thread_id:
+            return leads
+        
+        # Fetch comments from the thread
+        comments_url = f"https://hn.algolia.com/api/v1/search?tags=comment,story_{thread_id}&hitsPerPage=100"
+        req = urllib.request.Request(comments_url, headers={'User-Agent': 'LeadBot/1.0'})
+        
+        with urllib.request.urlopen(req, timeout=15) as response:
+            comments_data = json.loads(response.read())
+        
+        # Keywords for filtering
+        keywords = ["python", "javascript", "automation", "scraper", "bot", "api", 
+                   "integration", "remote", "contract", "freelance", "part-time"]
+        
+        for comment in comments_data.get('hits', []):
+            text = comment.get('text', '')
+            text_lower = text.lower()
+            
+            # Check if relevant to our keywords
+            if not any(kw in text_lower for kw in keywords):
+                continue
+            
+            # Extract company/job info
+            author = comment.get('author', 'Unknown')
+            comment_id = comment.get('objectID')
+            url = f"https://news.ycombinator.com/item?id={comment_id}"
+            
+            # Try to extract budget/salary info
+            budget = None
+            salary_match = re.search(r'\$[\d,]+k?|\$[\d,]+-\$?[\d,]+', text)
+            if salary_match:
+                budget = salary_match.group()
+            
+            # Clean HTML tags from text
+            clean_text = re.sub(r'<[^\u003e]+>', ' ', text).strip()[:500]
+            
+            leads.append(Lead(
+                source=f"HN Who is Hiring",
+                title=f"Job post by {author}",
+                description=clean_text,
+                url=url,
+                budget_hint=budget
+            ))
+            
+    except Exception as e:
+        print(f"Error fetching HN Who is Hiring: {e}", file=sys.stderr)
+    
+    return leads
+
+
+def fetch_weworkremotely() -> List[Lead]:
+    """Fetch from We Work Remotely RSS feed."""
+    leads = []
+    
+    try:
+        feed = feedparser.parse("https://weworkremotely.com/remote-jobs.rss")
+        
+        # Keywords for filtering
+        keywords = ["python", "javascript", "developer", "engineer", "scraper", 
+                   "automation", "bot", "api", "integration", "backend"]
+        
+        for entry in feed.entries[:30]:  # Check last 30 entries
+            title = entry.get('title', '')
+            desc = entry.get('summary', entry.get('description', ''))
+            url = entry.get('link', '')
+            
+            text = f"{title} {desc}".lower()
+            
+            # Check keywords
+            if not any(kw in text for kw in keywords):
+                continue
+            
+            # Try to extract company name from title
+            # Format usually: "Company: Job Title"
+            company = "Unknown"
+            if ':' in title:
+                parts = title.split(':', 1)
+                company = parts[0].strip()
+                job_title = parts[1].strip()
+            else:
+                job_title = title
+            
+            leads.append(Lead(
+                source="We Work Remotely",
+                title=job_title,
+                description=f"Company: {company}. {desc[:300]}",
+                url=url
+            ))
+            
+    except Exception as e:
+        print(f"Error fetching We Work Remotely: {e}", file=sys.stderr)
+    
+    return leads
+
+
+def fetch_remoteok() -> List[Lead]:
+    """Fetch from RemoteOK API (public, no auth required)."""
+    leads = []
+    
+    try:
+        url = "https://remoteok.com/api"
+        req = urllib.request.Request(
+            url,
+            headers={
+                'User-Agent': 'LeadBot/1.0',
+                'Accept': 'application/json'
+            }
+        )
+        
+        with urllib.request.urlopen(req, timeout=15) as response:
+            data = json.loads(response.read())
+        
+        # First item is metadata, rest are jobs
+        if len(data) <= 1:
+            return leads
+        
+        jobs = data[1:]  # Skip metadata
+        
+        # Keywords for filtering
+        keywords = ["python", "javascript", "scraper", "automation", "bot", 
+                   "api", "integration", "backend", "developer", "engineer"]
+        
+        for job in jobs[:50]:  # Check last 50 jobs
+            position = job.get('position', '')
+            company = job.get('company', '')
+            description = job.get('description', '')
+            url = job.get('url', job.get('apply_url', ''))
+            
+            text = f"{position} {description}".lower()
+            
+            # Check keywords
+            if not any(kw in text for kw in keywords):
+                continue
+            
+            # Get salary info if available
+            salary = job.get('salary', '')
+            budget = salary if salary else None
+            
+            # Clean description
+            clean_desc = re.sub(r'<[^\u003e]+>', ' ', description).strip()[:400]
+            
+            leads.append(Lead(
+                source="RemoteOK",
+                title=f"{position} at {company}",
+                description=clean_desc,
+                url=url,
+                budget_hint=budget
+            ))
+            
+    except Exception as e:
+        print(f"Error fetching RemoteOK: {e}", file=sys.stderr)
+    
+    return leads
+
+
 def fetch_all_leads(min_score: int = None) -> List:
     """Fetch and score all leads from all sources."""
     global config
@@ -166,6 +345,14 @@ def fetch_all_leads(min_score: int = None) -> List:
     # IndieHackers (from config)
     if config.indiehackers_enabled:
         all_leads.extend(fetch_indiehackers_rss())
+    
+    # Low-hanging fruit: HN, WWR, RemoteOK
+    if config.get('channels.hn.enabled', True):
+        all_leads.extend(fetch_hn_whoishiring())
+    if config.get('channels.weworkremotely.enabled', True):
+        all_leads.extend(fetch_weworkremotely())
+    if config.get('channels.remoteok.enabled', True):
+        all_leads.extend(fetch_remoteok())
     
     # Score and filter
     seen = load_seen()

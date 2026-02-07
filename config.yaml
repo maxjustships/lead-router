@@ -1,5 +1,6 @@
-# Lead Router Configuration v2.0
+# Lead Router Configuration v2.1
 # Multi-gig support: Scraping, Bots, Extensions, Integrations, E-commerce
+# Channels: Reddit, IndieHackers, HN Who is Hiring, We Work Remotely, RemoteOK
 
 channels:
   upwork:
@@ -59,6 +60,22 @@ channels:
         keywords: ["looking for", "need developer", "build an app", "automation", 
                    "scraper", "mvp", "bot", "integration", "api", "webhook",
                    "chrome extension", "discord", "telegram", "shopify"]
+
+  # Low-hanging fruit - no auth required
+  hn:
+    enabled: true
+    type: api
+    description: "Hacker News Who is Hiring monthly thread"
+    
+  weworkremotely:
+    enabled: true
+    type: rss
+    description: "We Work Remotely - remote job board"
+    
+  remoteok:
+    enabled: true
+    type: api
+    description: "RemoteOK - remote jobs with salary info"
 
 qualification:
   min_score: 40  # Out of 100
