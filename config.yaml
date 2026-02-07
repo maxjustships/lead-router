@@ -1,55 +1,61 @@
-# Lead Router Configuration v2.1
+# Lead Router Configuration v2.2
 # Multi-gig support: Scraping, Bots, Extensions, Integrations, E-commerce
-# Channels: Reddit, IndieHackers, HN Who is Hiring, We Work Remotely, RemoteOK
+# Channels: Reddit (15 subreddits), IndieHackers, HN Who is Hiring, We Work Remotely, RemoteOK
+# Rate limits respected: 500ms between Reddit requests, 1s for HN
 
 channels:
-  upwork:
-    enabled: true
-    type: rss
-    feeds:
-      - name: "web-scraping"
-        url: "https://www.upwork.com/nx/jobs/search/?q=python+scraper&sort=recency&rss=true"
-        keywords: ["scraper", "scraping", "crawl", "extract data", "automation", "bot", "chrome extension"]
-      - name: "bot-development"
-        url: "https://www.upwork.com/nx/jobs/search/?q=discord+bot+telegram&sort=recency&rss=true"
-        keywords: ["discord bot", "telegram bot", "slack bot", "chatbot", "bot development"]
-      - name: "chrome-extensions"
-        url: "https://www.upwork.com/nx/jobs/search/?q=chrome+extension&sort=recency&rss=true"
-        keywords: ["chrome extension", "browser extension", "firefox addon", "manifest v3"]
-      - name: "api-integration"
-        url: "https://www.upwork.com/nx/jobs/search/?q=api+integration&sort=recency&rss=true"
-        keywords: ["api integration", "webhook", "rest api", "third party api", "connect"]
-      - name: "automation-workflow"
-        url: "https://www.upwork.com/nx/jobs/search/?q=n8n+make+zapier&sort=recency&rss=true"
-        keywords: ["n8n", "make.com", "zapier", "workflow automation", "automate"]
-      - name: "shopify-apps"
-        url: "https://www.upwork.com/nx/jobs/search/?q=shopify+app&sort=recency&rss=true"
-        keywords: ["shopify", "shopify app", "woocommerce", "ecommerce integration"]
-    
   reddit:
     enabled: true
     type: api
+    rate_limit_ms: 500  # Delay between subreddit requests
     subreddits:
+      # Primary hiring subreddits
       - name: "forhire"
         keywords: ["[hiring]", "developer", "python", "scraper", "automation", "bot", 
-                   "extension", "integration", "discord", "telegram", "api", "shopify"]
+                   "extension", "integration", "discord", "telegram", "api", "shopify", "freelance"]
         min_budget_hint: 200
       - name: "slavelabour"
-        keywords: ["[task]", "scraper", "automation", "script", "bot", "simple"]
+        keywords: ["[task]", "scraper", "automation", "script", "bot", "simple", "quick"]
       - name: "webdev"
         keywords: ["[hiring]", "javascript", "chrome extension", "api", 
-                   "developer", "integration", "webhook"]
+                   "developer", "integration", "webhook", "frontend", "react"]
       - name: "Python"
-        keywords: ["[hiring]", "scraper", "automation", "script", "bot", 
-                   "discord", "telegram", "api"]
+        keywords: ["[hiring]", "python", "scraper", "automation", "script", 
+                   "bot", "discord", "telegram", "django", "flask"]
+      
+      # Bot/Extension specific
       - name: "discord_bots"
-        keywords: ["[hiring]", "bot", "discord", "automation"]
+        keywords: ["[hiring]", "bot", "discord", "automation", "telegram", "slack"]
       - name: "Shopify_App_Dev"
-        keywords: ["[hiring]", "shopify", "app", "integration", "api"]
+        keywords: ["[hiring]", "shopify", "app", "integration", "api", "ecommerce"]
+      
+      # Project/MVP focused
       - name: "sideproject"
         keywords: ["looking for", "need help", "developer", "build", "mvp", "automation"]
+      - name: "startups"
+        keywords: ["looking for", "need developer", "build", "mvp", "prototype", "beta"]
+      
+      # Alternative hiring
       - name: "jobbit"
-        keywords: ["[hiring]", "remote", "python", "automation", "scraper", "bot"]
+        keywords: ["[hiring]", "remote", "python", "automation", "scraper", "bot", "contract"]
+      - name: "hireaprogrammer"
+        keywords: ["[hiring]", "developer", "programmer", "script", "automation", "bot", "extension"]
+      
+      # Small tasks / quick gigs
+      - name: "beermoney"
+        keywords: ["[hiring]", "script", "automation", "bot", "scraper", "tool"]
+      - name: "WorkOnline"
+        keywords: ["[hiring]", "remote", "developer", "freelance", "contract", "python"]
+      
+      # Specialized
+      - name: "javascript"
+        keywords: ["[hiring]", "javascript", "typescript", "node", "react", "extension"]
+      - name: "datascience"
+        keywords: ["[hiring]", "python", "scraper", "data", "automation", "api", "pandas"]
+      - name: "web_design"
+        keywords: ["[hiring]", "web", "developer", "frontend", "javascript", "shopify"]
+      - name: "SmallBusiness"
+        keywords: ["looking for", "need help", "automation", "website", "shopify", "integration"]
     
   indiehackers:
     enabled: true
@@ -65,6 +71,7 @@ channels:
   hn:
     enabled: true
     type: api
+    rate_limit_ms: 1000
     description: "Hacker News Who is Hiring monthly thread"
     
   weworkremotely:
@@ -75,6 +82,7 @@ channels:
   remoteok:
     enabled: true
     type: api
+    rate_limit_ms: 500
     description: "RemoteOK - remote jobs with salary info"
 
 qualification:
@@ -230,6 +238,62 @@ gig_types:
     name: "Automation"
     keywords: ["automation", "automate", "script", "cron job"]
 
+# Outreach Templates by Platform
+outreach_templates:
+  reddit_forhire:
+    tone: "Casual, direct, no corporate speak"
+    structure:
+      - "Hook: Acknowledge the gig specifically"
+      - "Proof: 1-2 sentences about similar work"
+      - "Offer: What you can do + timeline"
+      - "CTA: DM to discuss"
+    hot_offer: true  # Can include code sample/demo
+    
+  reddit_slavelabour:
+    tone: "Very casual, quick, to the point"
+    structure:
+      - "Hook: Short ack"
+      - "Proof: One-liner"
+      - "Offer: Price + delivery time"
+      - "CTA: DM"
+    hot_offer: true
+    
+  reddit_startups:
+    tone: "Professional but friendly, business-focused"
+    structure:
+      - "Hook: Comment on business value"
+      - "Proof: Relevant startup/MVP experience"
+      - "Offer: How you can help them grow"
+      - "CTA: Call or email"
+    hot_offer: true
+    
+  indiehackers:
+    tone: "Founder-to-founder, business value focused"
+    structure:
+      - "Hook: Acknowledge the pain point"
+      - "Proof: Similar founder project"
+      - "Offer: Solution that scales"
+      - "CTA: Book a call"
+    hot_offer: true
+    
+  hn_whoishiring:
+    tone: "Professional, technical, concise"
+    structure:
+      - "Hook: Reference specific tech stack"
+      - "Proof: Relevant technical work"
+      - "Offer: Availability + skills match"
+      - "CTA: Email or GitHub"
+    hot_offer: false
+    
+  remoteok:
+    tone: "Professional, remote-work oriented"
+    structure:
+      - "Hook: Match their requirements"
+      - "Proof: Remote work experience"
+      - "Offer: Skills + availability"
+      - "CTA: Apply or email"
+    hot_offer: false
+
 delivery:
   times:
     - "09:00"
@@ -237,3 +301,25 @@ delivery:
   timezone: "Asia/Almaty"
   min_leads_per_batch: 3
   max_leads_per_batch: 10
+  
+# Hot Offers - Partial work to include in outreach
+hot_offers:
+  scraping:
+    sample_output: true  # Provide CSV/JSON sample
+    demo_script: true    # Include basic scraper code
+    
+  bot:
+    basic_structure: true  # Bot skeleton code
+    command_example: true  # Sample command handler
+    
+  extension:
+    manifest_template: true  # manifest.json ready
+    popup_template: true     # Basic popup HTML/CSS
+    
+  integration:
+    api_connection: true   # Connection code snippet
+    webhook_handler: true  # Webhook receiver template
+    
+  ecommerce:
+    shopify_app_structure: true  # App structure
+    api_auth_template: true      # OAuth starter

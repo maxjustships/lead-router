@@ -314,6 +314,152 @@ def fetch_remoteok() -> List[Lead]:
     return leads
 
 
+def fetch_peopleperhour() -> List[Lead]:
+    """Fetch from PeoplePerHour RSS feed for freelance gigs."""
+    leads = []
+    
+    try:
+        # PeoplePerHour RSS for development jobs
+        # URL format: https://www.peopleperhour.com/rss/jobs?q=python+developer
+        urls_to_check = [
+            "https://www.peopleperhour.com/rss/jobs?q=python+developer",
+            "https://www.peopleperhour.com/rss/jobs?q=javascript+developer",
+            "https://www.peopleperhour.com/rss/jobs?q=web+scraper",
+            "https://www.peopleperhour.com/rss/jobs?q=automation+bot",
+        ]
+        
+        keywords = ["python", "javascript", "scraper", "automation", "bot", 
+                   "api", "integration", "webhook", "script", "developer"]
+        
+        for rss_url in urls_to_check:
+            try:
+                feed = feedparser.parse(rss_url)
+                
+                for entry in feed.entries[:10]:  # Top 10 from each feed
+                    title = entry.get('title', '')
+                    desc = entry.get('summary', entry.get('description', ''))
+                    url = entry.get('link', '')
+                    
+                    text = f"{title} {desc}".lower()
+                    
+                    # Check if relevant
+                    if not any(kw in text for kw in keywords):
+                        continue
+                    
+                    # Extract budget if mentioned
+                    budget = None
+                    budget_match = re.search(r'\$[\d,]+(?:-\$?[\d,]+)?|\$\d+', title + " " + desc)
+                    if budget_match:
+                        budget = budget_match.group()
+                    
+                    leads.append(Lead(
+                        source="PeoplePerHour",
+                        title=title,
+                        description=desc[:400],
+                        url=url,
+                        budget_hint=budget
+                    ))
+                    
+            except Exception as e:
+                print(f"Error fetching PPH feed {rss_url}: {e}", file=sys.stderr)
+                continue
+                
+    except Exception as e:
+        print(f"Error fetching PeoplePerHour: {e}", file=sys.stderr)
+    
+    return leads
+
+
+def fetch_simplyhired() -> List[Lead]:
+    """Fetch from SimplyHired for freelance/contract gigs."""
+    leads = []
+    
+    try:
+        # SimplyHired RSS feed for remote freelance jobs
+        # URL format: https://www.simplyhired.com/search?q=python+developer&rbs=50&tm=0&t=4
+        # t=4 means freelance/contract
+        rss_url = "https://www.simplyhired.com/search?q=python+developer+freelance&rbs=50&tm=0&t=4&fdb=7"
+        
+        feed = feedparser.parse(rss_url)
+        
+        keywords = ["python", "javascript", "scraper", "automation", "bot", 
+                   "api", "integration", "freelance", "contract", "remote"]
+        
+        for entry in feed.entries[:15]:
+            title = entry.get('title', '')
+            desc = entry.get('summary', entry.get('description', ''))
+            url = entry.get('link', '')
+            
+            text = f"{title} {desc}".lower()
+            
+            # Check if relevant
+            if not any(kw in text for kw in keywords):
+                continue
+            
+            # Extract budget/salary
+            budget = None
+            budget_match = re.search(r'\$[\d,]+(?:k|K)?(?:/hr| per hour| hourly)?', title + " " + desc)
+            if budget_match:
+                budget = budget_match.group()
+            
+            leads.append(Lead(
+                source="SimplyHired",
+                title=title,
+                description=desc[:400],
+                url=url,
+                budget_hint=budget
+            ))
+            
+    except Exception as e:
+        print(f"Error fetching SimplyHired: {e}", file=sys.stderr)
+    
+    return leads
+
+
+def fetch_guru() -> List[Lead]:
+    """Fetch from Guru.com freelance jobs."""
+    leads = []
+    
+    try:
+        # Guru RSS for development jobs
+        rss_url = "https://www.guru.com/rss/jobs/skill/python,web-development,automation/"
+        
+        feed = feedparser.parse(rss_url)
+        
+        keywords = ["python", "javascript", "scraper", "automation", "bot", 
+                   "api", "integration", "webhook", "script"]
+        
+        for entry in feed.entries[:15]:
+            title = entry.get('title', '')
+            desc = entry.get('summary', entry.get('description', ''))
+            url = entry.get('link', '')
+            
+            text = f"{title} {desc}".lower()
+            
+            # Check if relevant
+            if not any(kw in text for kw in keywords):
+                continue
+            
+            # Extract budget
+            budget = None
+            budget_match = re.search(r'\$[\d,]+(?:-\$?[\d,]+)?|\$\d+', title + " " + desc)
+            if budget_match:
+                budget = budget_match.group()
+            
+            leads.append(Lead(
+                source="Guru",
+                title=title,
+                description=desc[:400],
+                url=url,
+                budget_hint=budget
+            ))
+            
+    except Exception as e:
+        print(f"Error fetching Guru: {e}", file=sys.stderr)
+    
+    return leads
+
+
 def fetch_all_leads(min_score: int = None) -> List:
     """Fetch and score all leads from all sources."""
     global config
@@ -324,35 +470,62 @@ def fetch_all_leads(min_score: int = None) -> List:
     
     all_leads = []
     
-    # Reddit (from config) - expanded for all gig types
+    # Reddit subreddits - freelance focused with rate limiting
     reddit_subs = [
+        # Primary hiring subreddits
         ("forhire", ["[hiring]", "developer", "python", "scraper", "automation", "bot", "extension", 
-                     "integration", "discord", "telegram", "api", "shopify"]),
-        ("slavelabour", ["[task]", "scraper", "automation", "script", "bot", "simple"]),
-        ("webdev", ["[for hire]", "[hiring]", "javascript", "chrome extension", "api", 
-                    "developer", "integration", "webhook"]),
-        ("Python", ["[for hire]", "[hiring]", "scraper", "automation", "script", 
-                    "bot", "discord", "telegram"]),
+                     "integration", "discord", "telegram", "api", "shopify", "freelance"]),
+        ("slavelabour", ["[task]", "scraper", "automation", "script", "bot", "simple", "quick"]),
+        ("webdev", ["[hiring]", "javascript", "chrome extension", "api", 
+                    "developer", "integration", "webhook", "frontend", "react"]),
+        ("Python", ["[hiring]", "python", "scraper", "automation", "script", 
+                    "bot", "discord", "telegram", "django", "flask"]),
+        
+        # Bot/Extension specific
+        ("discord_bots", ["[hiring]", "bot", "discord", "automation", "telegram", "slack"]),
+        ("Shopify_App_Dev", ["[hiring]", "shopify", "app", "integration", "api", "ecommerce"]),
+        
+        # Project/MVP focused
         ("sideproject", ["looking for", "need help", "developer", "build", "mvp", "automation"]),
-        ("jobbit", ["[hiring]", "remote", "python", "automation", "scraper", "bot"]),
-        ("discord_bots", ["[hiring]", "bot", "discord", "automation"]),
-        ("Shopify_App_Dev", ["[hiring]", "shopify", "app", "integration", "api"]),
+        ("startups", ["looking for", "need developer", "build", "mvp", "prototype", "beta"]),
+        
+        # Alternative hiring
+        ("jobbit", ["[hiring]", "remote", "python", "automation", "scraper", "bot", "contract"]),
+        ("hireaprogrammer", ["[hiring]", "developer", "programmer", "script", "automation", "bot", "extension"]),
+        
+        # Small tasks / quick gigs
+        ("beermoney", ["[hiring]", "script", "automation", "bot", "scraper", "tool"]),
+        ("WorkOnline", ["[hiring]", "remote", "developer", "freelance", "contract", "python"]),
+        
+        # Specialized
+        ("javascript", ["[hiring]", "javascript", "typescript", "node", "react", "extension"]),
+        ("datascience", ["[hiring]", "python", "scraper", "data", "automation", "api", "pandas"]),
+        ("web_design", ["[hiring]", "web", "developer", "frontend", "javascript", "shopify"]),
+        ("SmallBusiness", ["looking for", "need help", "automation", "website", "shopify", "integration"]),
     ]
     
+    # Rate limiting: Add delay between requests (respect Reddit API limits)
+    import time
     for sub, keywords in reddit_subs:
-        all_leads.extend(fetch_reddit_api(sub, keywords))
+        leads = fetch_reddit_api(sub, keywords)
+        all_leads.extend(leads)
+        time.sleep(0.5)  # 500ms delay between subreddits
     
-    # IndieHackers (from config)
+    # IndieHackers (RSS - no rate limit concerns)
     if config.indiehackers_enabled:
         all_leads.extend(fetch_indiehackers_rss())
+        time.sleep(0.2)
     
-    # Low-hanging fruit: HN, WWR, RemoteOK
+    # Low-hanging fruit: HN, WWR, RemoteOK (with rate limiting)
     if config.get('channels.hn.enabled', True):
         all_leads.extend(fetch_hn_whoishiring())
+        time.sleep(1)  # HN Algolia has stricter limits
     if config.get('channels.weworkremotely.enabled', True):
         all_leads.extend(fetch_weworkremotely())
+        time.sleep(0.5)
     if config.get('channels.remoteok.enabled', True):
         all_leads.extend(fetch_remoteok())
+        time.sleep(0.5)
     
     # Score and filter
     seen = load_seen()
