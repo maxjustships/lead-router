@@ -1,0 +1,137 @@
+# Lead Router Configuration
+# Low-hanging fruit: RSS/API accessible only
+
+channels:
+  upwork:
+    enabled: true
+    type: rss
+    feeds:
+      - name: "web-scraping"
+        url: "https://www.upwork.com/ab/feed/topics/rss?securityToken={TOKEN}&userUid={UID}&orgUid={ORG}"
+        keywords: ["scraper", "scraping", "crawl", "extract data", "automation", "bot", "chrome extension"]
+      - name: "automation"
+        url: "https://www.upwork.com/ab/feed/topics/rss?securityToken={TOKEN}&userUid={UID}&orgUid={ORG}"
+        keywords: ["automation", "n8n", "make.com", "zapier", "workflow", "integrate", "api integration"]
+      - name: "shopify-apps"
+        url: "https://www.upwork.com/ab/feed/topics/rss?securityToken={TOKEN}&userUid={UID}&orgUid={ORG}"
+        keywords: ["shopify", "shopify app", "woocommerce", "ecommerce integration"]
+    
+  reddit:
+    enabled: true
+    type: api
+    subreddits:
+      - name: "forhire"
+        keywords: ["[hiring]", "developer", "python", "scraper", "automation", "bot", "extension"]
+        min_budget_hint: 200
+      - name: "slavelabour"
+        keywords: ["[task]", "scraper", "automation", "script", "bot"]
+        # Lower budget but high volume
+      - name: "webdev"
+        keywords: ["[for hire]", "[hiring]", "javascript", "chrome extension", "api"]
+    
+  indiehackers:
+    enabled: true
+    type: rss
+    feeds:
+      - name: "looking-for-builder"
+        url: "https://www.indiehackers.com/rss"
+        keywords: ["looking for", "need developer", "build an app", "automation", "scraper", "mvp"]
+
+qualification:
+  min_score: 40  # Out of 100 (lowered for volume, raised tech requirements)
+  
+  criteria:
+    ai_doable:
+      weight: 50  # #1 priority
+      indicators:
+        - "clear requirements"
+        - "well-defined scope"
+        - "specific data source"
+        - "specific output format"
+        - "single task"
+        - "scrape"
+        - "automation"
+        - "script"
+        - "bot"
+        - "webhook"
+        - "integration"
+        - "mvp"
+        - "prototype"
+      avoid:
+        - "rust"
+        - "c++"
+        - "embedded"
+        - "systems"
+      
+    tech_stack:
+      weight: 25
+      preferred:
+        - "python"
+        - "javascript"
+        - "typescript"
+        - "node"
+        - "react"
+      acceptable:
+        - "chrome extension"
+        - "shopify"
+        - "wordpress"
+        - "api integration"
+      avoid:
+        - "rust"
+        - "c++"
+        - "c#"
+        - "embedded"
+        - "systems"
+        
+    urgency:
+      weight: 10
+      signals:
+        - "asap"
+        - "urgent"
+        - "immediately"
+        - "quick turnaround"
+        - "this week"
+        - "today"
+        - "deadline"
+          
+    payment_tier:
+      weight: 15
+      tiers:
+        - pattern: "\$[\d,]+(k|K)?"
+          score: 100
+        - pattern: "\$\d{3,}"
+          score: 80
+        - pattern: "\$\d{2}"
+          score: 60
+        - pattern: "\$\d+"
+          score: 40
+        - pattern: "paid|pay|budget|compensation|rate|hourly"
+          score: 30
+          
+    tech_match:
+      weight: 25
+      data_signals:
+        - "csv"
+        - "excel"
+        - "json"
+        - "scrape"
+        - "extract"
+        - "data entry"
+      code_signals:
+        - "chrome extension"
+        - "browser extension"
+        - "shopify"
+        - "wordpress"
+        - "integration"
+        - "api"
+        - "standalone"
+        - "app"
+        - "dashboard"
+
+delivery:
+  times:
+    - "09:00"
+    - "14:00"
+  timezone: "Asia/Almaty"
+  min_leads_per_batch: 3  # Don't spam if nothing good
+  max_leads_per_batch: 10
