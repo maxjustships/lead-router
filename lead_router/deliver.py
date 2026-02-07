@@ -12,17 +12,22 @@ import pytz
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from lead_router.fetcher import fetch_all_leads, format_lead
+from lead_router.config import get_config
 
 
 def main():
     """Main entry point."""
-    tz = pytz.timezone("Asia/Almaty")
+    config = get_config()
+    tz = pytz.timezone(config.get('delivery.timezone', 'Asia/Almaty'))
     now = datetime.now(tz)
     
     print(f"🔍 Lead Scan — {now.strftime('%Y-%m-%d %H:%M')}")
     print()
     
-    results = fetch_all_leads(min_score=40)  # Tuned for AI-doability, Python/JS stack
+    min_score = config.min_score
+    max_leads = config.get('delivery.max_leads_per_batch', 10)
+    
+    results = fetch_all_leads(min_score=min_score)  # Tuned for AI-doability, Python/JS stack
     
     if not results:
         print("📭 No new qualified leads found since last check.")
@@ -31,7 +36,7 @@ def main():
         return
     
     # Header
-    batch_size = min(10, len(results))
+    batch_size = min(max_leads, len(results))
     print(f"🎯 Found {len(results)} qualified leads (showing top {batch_size})")
     print()
     print("=" * 50)

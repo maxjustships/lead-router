@@ -97,15 +97,15 @@ qualification:
     payment_tier:
       weight: 15
       tiers:
-        - pattern: "\$[\d,]+(k|K)?"
+        - pattern: '\$[\d,]+(k|K)?'
           score: 100
-        - pattern: "\$\d{3,}"
+        - pattern: '\$\d{3,}'
           score: 80
-        - pattern: "\$\d{2}"
+        - pattern: '\$\d{2}'
           score: 60
-        - pattern: "\$\d+"
+        - pattern: '\$\d+'
           score: 40
-        - pattern: "paid|pay|budget|compensation|rate|hourly"
+        - pattern: 'paid|pay|budget|compensation|rate|hourly'
           score: 30
           
     tech_match:

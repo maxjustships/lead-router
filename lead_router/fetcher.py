@@ -14,10 +14,15 @@ from pathlib import Path
 from typing import List, Set
 
 from lead_router.scorer import Lead, score_lead, format_lead
+from lead_router.config import get_config
 
 
 # Storage for deduplication
 SEEN_FILE = Path(__file__).parent.parent / ".seen_leads.json"
+
+
+# Load config
+config = get_config()
 
 
 def load_seen() -> Set[str]:
@@ -101,7 +106,9 @@ def fetch_reddit_api(subreddit: str, keywords: List[str]) -> List[Lead]:
 def fetch_indiehackers_rss() -> List[Lead]:
     """Fetch from IndieHackers RSS."""
     leads = []
-    keywords = ["looking for", "need developer", "build an app", "automation", "scraper", "mvp"]
+    # Get keywords from config or use defaults
+    keywords = config.get('channels.indiehackers.feeds.0.keywords', 
+                         ["looking for", "need developer", "build an app", "automation", "scraper", "mvp"])
     
     try:
         feed = feedparser.parse("https://www.indiehackers.com/rss")
@@ -126,25 +133,26 @@ def fetch_indiehackers_rss() -> List[Lead]:
     return leads
 
 
-def fetch_all_leads(min_score: int = 40) -> List:
+def fetch_all_leads(min_score: int = None) -> List:
     """Fetch and score all leads from all sources."""
+    global config
+    
+    # Use config if min_score not provided
+    if min_score is None:
+        min_score = config.min_score
+    
     all_leads = []
     
-    # Reddit (no auth needed)
-    reddit_subs = [
-        ("forhire", ["[hiring]", "developer", "python", "scraper", "automation", "bot", "extension"]),
-        ("slavelabour", ["[task]", "scraper", "automation", "script", "bot"]),
-        ("webdev", ["[for hire]", "[hiring]", "javascript", "chrome extension", "api", "developer"]),
-        ("Python", ["[for hire]", "[hiring]", "scraper", "automation", "script", "bot"]),
-        ("sideproject", ["looking for", "need help", "developer", "build"]),
-        ("jobbit", ["[hiring]", "remote", "python", "automation", "scraper"]),
-    ]
+    # Reddit (from config)
+    for sub_config in config.reddit_subs:
+        sub_name = sub_config.get('name')
+        keywords = sub_config.get('keywords', [])
+        if sub_name and keywords:
+            all_leads.extend(fetch_reddit_api(sub_name, keywords))
     
-    for sub, keywords in reddit_subs:
-        all_leads.extend(fetch_reddit_api(sub, keywords))
-    
-    # IndieHackers
-    all_leads.extend(fetch_indiehackers_rss())
+    # IndieHackers (from config)
+    if config.indiehackers_enabled:
+        all_leads.extend(fetch_indiehackers_rss())
     
     # Score and filter
     seen = load_seen()
