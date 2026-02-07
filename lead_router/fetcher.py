@@ -106,9 +106,11 @@ def fetch_reddit_api(subreddit: str, keywords: List[str]) -> List[Lead]:
 def fetch_indiehackers_rss() -> List[Lead]:
     """Fetch from IndieHackers RSS."""
     leads = []
-    # Get keywords from config or use defaults
+    # Expanded keywords for all gig types
     keywords = config.get('channels.indiehackers.feeds.0.keywords', 
-                         ["looking for", "need developer", "build an app", "automation", "scraper", "mvp"])
+                         ["looking for", "need developer", "build an app", "automation", 
+                          "scraper", "mvp", "bot", "integration", "api", "webhook",
+                          "chrome extension", "discord", "telegram", "shopify"])
     
     try:
         feed = feedparser.parse("https://www.indiehackers.com/rss")
@@ -143,12 +145,23 @@ def fetch_all_leads(min_score: int = None) -> List:
     
     all_leads = []
     
-    # Reddit (from config)
-    for sub_config in config.reddit_subs:
-        sub_name = sub_config.get('name')
-        keywords = sub_config.get('keywords', [])
-        if sub_name and keywords:
-            all_leads.extend(fetch_reddit_api(sub_name, keywords))
+    # Reddit (from config) - expanded for all gig types
+    reddit_subs = [
+        ("forhire", ["[hiring]", "developer", "python", "scraper", "automation", "bot", "extension", 
+                     "integration", "discord", "telegram", "api", "shopify"]),
+        ("slavelabour", ["[task]", "scraper", "automation", "script", "bot", "simple"]),
+        ("webdev", ["[for hire]", "[hiring]", "javascript", "chrome extension", "api", 
+                    "developer", "integration", "webhook"]),
+        ("Python", ["[for hire]", "[hiring]", "scraper", "automation", "script", 
+                    "bot", "discord", "telegram"]),
+        ("sideproject", ["looking for", "need help", "developer", "build", "mvp", "automation"]),
+        ("jobbit", ["[hiring]", "remote", "python", "automation", "scraper", "bot"]),
+        ("discord_bots", ["[hiring]", "bot", "discord", "automation"]),
+        ("Shopify_App_Dev", ["[hiring]", "shopify", "app", "integration", "api"]),
+    ]
+    
+    for sub, keywords in reddit_subs:
+        all_leads.extend(fetch_reddit_api(sub, keywords))
     
     # IndieHackers (from config)
     if config.indiehackers_enabled:

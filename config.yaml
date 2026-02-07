@@ -1,5 +1,5 @@
-# Lead Router Configuration
-# Low-hanging fruit: RSS/API accessible only
+# Lead Router Configuration v2.0
+# Multi-gig support: Scraping, Bots, Extensions, Integrations, E-commerce
 
 channels:
   upwork:
@@ -7,13 +7,22 @@ channels:
     type: rss
     feeds:
       - name: "web-scraping"
-        url: "https://www.upwork.com/ab/feed/topics/rss?securityToken={TOKEN}&userUid={UID}&orgUid={ORG}"
+        url: "https://www.upwork.com/nx/jobs/search/?q=python+scraper&sort=recency&rss=true"
         keywords: ["scraper", "scraping", "crawl", "extract data", "automation", "bot", "chrome extension"]
-      - name: "automation"
-        url: "https://www.upwork.com/ab/feed/topics/rss?securityToken={TOKEN}&userUid={UID}&orgUid={ORG}"
-        keywords: ["automation", "n8n", "make.com", "zapier", "workflow", "integrate", "api integration"]
+      - name: "bot-development"
+        url: "https://www.upwork.com/nx/jobs/search/?q=discord+bot+telegram&sort=recency&rss=true"
+        keywords: ["discord bot", "telegram bot", "slack bot", "chatbot", "bot development"]
+      - name: "chrome-extensions"
+        url: "https://www.upwork.com/nx/jobs/search/?q=chrome+extension&sort=recency&rss=true"
+        keywords: ["chrome extension", "browser extension", "firefox addon", "manifest v3"]
+      - name: "api-integration"
+        url: "https://www.upwork.com/nx/jobs/search/?q=api+integration&sort=recency&rss=true"
+        keywords: ["api integration", "webhook", "rest api", "third party api", "connect"]
+      - name: "automation-workflow"
+        url: "https://www.upwork.com/nx/jobs/search/?q=n8n+make+zapier&sort=recency&rss=true"
+        keywords: ["n8n", "make.com", "zapier", "workflow automation", "automate"]
       - name: "shopify-apps"
-        url: "https://www.upwork.com/ab/feed/topics/rss?securityToken={TOKEN}&userUid={UID}&orgUid={ORG}"
+        url: "https://www.upwork.com/nx/jobs/search/?q=shopify+app&sort=recency&rss=true"
         keywords: ["shopify", "shopify app", "woocommerce", "ecommerce integration"]
     
   reddit:
@@ -21,13 +30,25 @@ channels:
     type: api
     subreddits:
       - name: "forhire"
-        keywords: ["[hiring]", "developer", "python", "scraper", "automation", "bot", "extension"]
+        keywords: ["[hiring]", "developer", "python", "scraper", "automation", "bot", 
+                   "extension", "integration", "discord", "telegram", "api", "shopify"]
         min_budget_hint: 200
       - name: "slavelabour"
-        keywords: ["[task]", "scraper", "automation", "script", "bot"]
-        # Lower budget but high volume
+        keywords: ["[task]", "scraper", "automation", "script", "bot", "simple"]
       - name: "webdev"
-        keywords: ["[for hire]", "[hiring]", "javascript", "chrome extension", "api"]
+        keywords: ["[hiring]", "javascript", "chrome extension", "api", 
+                   "developer", "integration", "webhook"]
+      - name: "Python"
+        keywords: ["[hiring]", "scraper", "automation", "script", "bot", 
+                   "discord", "telegram", "api"]
+      - name: "discord_bots"
+        keywords: ["[hiring]", "bot", "discord", "automation"]
+      - name: "Shopify_App_Dev"
+        keywords: ["[hiring]", "shopify", "app", "integration", "api"]
+      - name: "sideproject"
+        keywords: ["looking for", "need help", "developer", "build", "mvp", "automation"]
+      - name: "jobbit"
+        keywords: ["[hiring]", "remote", "python", "automation", "scraper", "bot"]
     
   indiehackers:
     enabled: true
@@ -35,33 +56,61 @@ channels:
     feeds:
       - name: "looking-for-builder"
         url: "https://www.indiehackers.com/rss"
-        keywords: ["looking for", "need developer", "build an app", "automation", "scraper", "mvp"]
+        keywords: ["looking for", "need developer", "build an app", "automation", 
+                   "scraper", "mvp", "bot", "integration", "api", "webhook",
+                   "chrome extension", "discord", "telegram", "shopify"]
 
 qualification:
-  min_score: 40  # Out of 100 (lowered for volume, raised tech requirements)
+  min_score: 40  # Out of 100
   
   criteria:
     ai_doable:
-      weight: 50  # #1 priority
+      weight: 50
       indicators:
+        # Universal
         - "clear requirements"
         - "well-defined scope"
-        - "specific data source"
-        - "specific output format"
-        - "single task"
-        - "scrape"
-        - "automation"
-        - "script"
-        - "bot"
+        - "specific"
+        - "documentation provided"
+        - "mockups"
+        - "examples"
+        # Scraping
+        - "csv"
+        - "json"
+        - "excel"
+        - "structured data"
+        - "export"
+        - "parse"
+        - "selector"
+        - "xpath"
+        # Bots
+        - "api token"
         - "webhook"
-        - "integration"
-        - "mvp"
-        - "prototype"
+        - "slash command"
+        - "message handler"
+        - "notification"
+        # Extensions
+        - "popup"
+        - "content script"
+        - "background script"
+        - "manifest v3"
+        # Integrations
+        - "oauth"
+        - "api key"
+        - "endpoint"
+        - "payload"
+        - "rest api"
+        - "graphql"
       avoid:
         - "rust"
         - "c++"
         - "embedded"
         - "systems"
+        - "consultant"
+        - "advisor"
+        - "strategy"
+        - "full-time position"
+        - "part-time employee"
       
     tech_stack:
       weight: 25
@@ -69,19 +118,47 @@ qualification:
         - "python"
         - "javascript"
         - "typescript"
+        - "js"
+        - "ts"
         - "node"
-        - "react"
-      acceptable:
-        - "chrome extension"
-        - "shopify"
-        - "wordpress"
-        - "api integration"
+        - "node.js"
+      tools:
+        scraping:
+          - "beautifulsoup"
+          - "scrapy"
+          - "selenium"
+          - "playwright"
+          - "requests"
+        bot:
+          - "discord.py"
+          - "telebot"
+          - "python-telegram-bot"
+          - "slack-sdk"
+          - "discord.js"
+        extension:
+          - "chrome"
+          - "manifest"
+          - "content script"
+          - "popup"
+        integration:
+          - "n8n"
+          - "zapier"
+          - "make.com"
+          - "webhook"
+          - "rest api"
+          - "graphql"
+        ecommerce:
+          - "shopify api"
+          - "woocommerce api"
+          - "liquid"
+          - "php"
       avoid:
         - "rust"
         - "c++"
         - "c#"
         - "embedded"
         - "systems"
+        - "low-level"
         
     urgency:
       weight: 10
@@ -93,6 +170,7 @@ qualification:
         - "this week"
         - "today"
         - "deadline"
+        - "rush"
           
     payment_tier:
       weight: 15
@@ -105,33 +183,40 @@ qualification:
           score: 60
         - pattern: '\$\d+'
           score: 40
-        - pattern: 'paid|pay|budget|compensation|rate|hourly'
+        - pattern: 'paid|pay|budget|compensation|rate|hourly|fixed price'
           score: 30
-          
-    tech_match:
-      weight: 25
-      data_signals:
-        - "csv"
-        - "excel"
-        - "json"
-        - "scrape"
-        - "extract"
-        - "data entry"
-      code_signals:
-        - "chrome extension"
-        - "browser extension"
-        - "shopify"
-        - "wordpress"
-        - "integration"
-        - "api"
-        - "standalone"
-        - "app"
-        - "dashboard"
+
+# Gig type scoring bonuses
+gig_types:
+  scraping:
+    emoji: "🕷️"
+    name: "Data Scraping"
+    keywords: ["scrape", "scraping", "extract", "crawl", "data extraction"]
+  bot:
+    emoji: "🤖"
+    name: "Bot Development"
+    keywords: ["discord bot", "telegram bot", "slack bot", "chatbot"]
+  extension:
+    emoji: "🧩"
+    name: "Browser Extension"
+    keywords: ["chrome extension", "browser extension", "firefox addon"]
+  integration:
+    emoji: "🔗"
+    name: "API Integration"
+    keywords: ["api integration", "webhook", "rest api", "n8n", "zapier"]
+  ecommerce:
+    emoji: "🛒"
+    name: "E-commerce"
+    keywords: ["shopify", "woocommerce", "etsy", "ecommerce"]
+  automation:
+    emoji: "⚙️"
+    name: "Automation"
+    keywords: ["automation", "automate", "script", "cron job"]
 
 delivery:
   times:
     - "09:00"
     - "14:00"
   timezone: "Asia/Almaty"
-  min_leads_per_batch: 3  # Don't spam if nothing good
+  min_leads_per_batch: 3
   max_leads_per_batch: 10
