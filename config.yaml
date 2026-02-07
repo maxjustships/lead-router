@@ -302,24 +302,35 @@ delivery:
   min_leads_per_batch: 3
   max_leads_per_batch: 10
   
-# Hot Offers - Partial work to include in outreach
+# Hot Offers - Result-based demos (not code)
+# Show working demos, data samples, videos - not code snippets
 hot_offers:
   scraping:
-    sample_output: true  # Provide CSV/JSON sample
-    demo_script: true    # Include basic scraper code
+    demo_type: "csv_sample"      # Attach 5-10 rows of real data
+    time_investment: "15-30min"  # Time to prepare demo
+    min_budget: 200              # Only for $200+ gigs
     
   bot:
-    basic_structure: true  # Bot skeleton code
-    command_example: true  # Sample command handler
+    demo_type: "working_bot"     # Deployed demo bot to test
+    time_investment: "30-60min"
+    min_budget: 200
     
   extension:
-    manifest_template: true  # manifest.json ready
-    popup_template: true     # Basic popup HTML/CSS
+    demo_type: "installable_zip" # ZIP with working extension
+    time_investment: "30-45min"
+    min_budget: 200
     
   integration:
-    api_connection: true   # Connection code snippet
-    webhook_handler: true  # Webhook receiver template
+    demo_type: "webhook_demo"    # Working webhook endpoint
+    time_investment: "45-90min"
+    min_budget: 300
     
   ecommerce:
-    shopify_app_structure: true  # App structure
-    api_auth_template: true      # OAuth starter
+    demo_type: "video_demo"      # Loom video of automation
+    time_investment: "60-120min"
+    min_budget: 300
+    
+  mvp:
+    demo_type: "micro_mvp"       # Working prototype
+    time_investment: "2-4hours"
+    min_budget: 500
